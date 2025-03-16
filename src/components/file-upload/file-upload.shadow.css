@@ -1,3 +1,5 @@
+/* стиля для shadow dom */
+
 .upload-box {
   display: flex;
   flex-direction: column;

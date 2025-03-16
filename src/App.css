@@ -30,6 +30,7 @@ h2 {
   overflow: hidden;
 }
 
+/* ИЗМЕНЕНИЕ ОКНА ПРИ РАЗНЫХ СОСТОЯНИЯХ (УСПЕХ или ОШИБКА операции)  */
 .app-container.success {
   background: linear-gradient(rgba(95, 92, 240, 1), rgba(143, 141, 244, 1));
   height: 230px;
@@ -44,6 +45,8 @@ h2 {
   background: linear-gradient(rgba(95, 92, 240, 1), rgba(221, 220, 252, 1), rgba(255, 255, 255, 1));
 }
 
+
+/* ОВЕРЛЕЙ ВО ВРЕМЯ ЗАГРУЗКИ ФАЙЛА */
 .overlay {
   position: absolute;
   height: 100%;

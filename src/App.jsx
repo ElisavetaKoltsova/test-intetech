@@ -4,6 +4,8 @@ import FileUpload from './components/file-upload/file-upload'
 import { ClipLoader } from 'react-spinners';
 
 const App = () => {
+  // Состояение для управления размером окна
+  // и выбора класса в зависимости от успеха или ошибки
   const [uploadState, setUploadState] = useState('');
 
   return (

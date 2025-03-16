@@ -13,14 +13,15 @@ import FileDropZone from "../file-drop-zone/file-drop-zone";
 import FileUploadProgress from "../file-upload-progress/file-upload-progress";
 
 const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
-  const shadowHostRef = useRef(null);
+  // Состояние для работы с Shadow DOM
   const [shadowRoot, setShadowRoot] = useState(null);
-  const inputFileNameRef = useRef(null);
-  const inputFileRef = useRef(null);
+
+  // Состояния для работы с файлами
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
+  // Состояния для управления процессом загрузки
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingEnd, setIsUploadingEnd] = useState(false);
   const [isUploadedToServer, setIsUploadedToServer] = useState(false);
@@ -30,12 +31,19 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
   const [errorValidationMessage, setErrorValidationMessage] = useState(null);
   const [isLoader, setIsLoader] = useState(false);
 
+  // Ссылки для работы с DOM
+  const shadowHostRef = useRef(null);
+  const inputFileNameRef = useRef(null);
+  const inputFileRef = useRef(null);
   const nodeInputRef = useRef(null);
   const nodeLoadingRef = useRef(null);
   const nodeLoadingEndRef = useRef(null);
   const nodeSuccessMessageRef = useRef(null);
   const nodeErrorMessageRef = useRef(null);
 
+  const progressIntervalRef = useRef(null); // Интервал для лоадера
+
+  // Создание Shadow DOM для стилизации
   useEffect(() => {
     if (shadowHostRef.current && !shadowHostRef.current.shadowRoot) {
       const shadow = shadowHostRef.current.attachShadow({ mode: "open" });
@@ -48,26 +56,42 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
     }
   }, [shadowRoot]);
 
+  // Интервал запускается только при изменении `isUploading`
+  useEffect(() => {
+    if (isUploading) {
+      progressIntervalRef.current = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+            setIsUploadingEnd(true);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    }
+  
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [isUploading]);
+
+  // Функция имитирует процесс загрузки с постепенным увеличением прогресса
   const loadFile = () => {
     setIsUploading(true);
     setProgress(0);
-
-    let progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsUploadingEnd(true);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
   };
 
-  const uploadingFile = (newFile) => {
+  // Проверка загружаемого файла и сохранение файла 
+  const checkAndSaveFile = (newFile) => {
     if (newFile) {
       const fileExtension = newFile.name.slice(newFile.name.lastIndexOf('.')).toLowerCase();
 
+      // Проверка разрешённых форматов файлов
       if (!allowedFormats.includes(fileExtension)) {
         setErrorValidationMessage({message: 'Допустимые форматы: .txt, .json, .csv', type: 'type'});
 
@@ -79,6 +103,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
         return;
       }
 
+      // Проверка введено ли имя
       if (!inputFileNameRef.current.value) {
         setErrorValidationMessage({message: 'Введите название файла', type: 'name'});
         // Очистка инпута
@@ -94,26 +119,30 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
     }
   };
 
+  // Обработчик выбора файла через папку
   const handleFileChange = (event) => {
     const newFile = event.target.files[0];
 
-    uploadingFile(newFile);
+    checkAndSaveFile(newFile);
   };
 
+  // Обработчик изменения имени файла
   const handleRename = (newName) => {
     setErrorValidationMessage(null);
     setFile(newName);
     setFileName(newName.name);
   };
 
+  // Обработчик перетаскивания файла
   const handleDrop = (event) => {
     event.preventDefault();
     setDragOver(false);
     const newFile = event.dataTransfer.files[0];
 
-    uploadingFile(newFile);
+    checkAndSaveFile(newFile);
   };
 
+  // Отправка файла на сервер
   const handleSend = async () => {
     if (!file || !fileName) {
       onUploadError();
@@ -136,7 +165,14 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
     setIsLoader(false);
   };
 
+  // Откат к изначальному виду
   const handleResetClickButton = () => {
+    // Очистка интервала для лоудера
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+
     if (!isLoader) {
       // Очистка инпута
       if (inputFileRef.current) {
@@ -160,6 +196,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
     }
   };
 
+  // Очищение поля с названием по клику
   const handleClearFileNameInputClick = () => {
     setFileName('');
     if (inputFileNameRef.current.value) {
