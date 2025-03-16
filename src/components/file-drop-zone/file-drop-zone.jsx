@@ -10,7 +10,7 @@ const FileDropZone = ({dragOver, onDragOver, onDragLeave, onDrop, inputFileRef, 
           onDrop={onDrop}
         >
           <label htmlFor="file-input">
-            <img src="/docs.png" alt="Перенесите ваш файл в область ниже" className="icon" />
+            <img src="docs.png" alt="Перенесите ваш файл в область ниже" className="icon" />
             <p>Перенесите ваш файл<br></br>в область ниже</p>
           </label>
           <input
