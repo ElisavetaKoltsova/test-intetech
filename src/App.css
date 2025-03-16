@@ -19,14 +19,17 @@ h2 {
 
 .app-container {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: column; */
+  display: grid;
+  grid-template-rows: auto;
   background: linear-gradient(rgba(95, 92, 240, 1), rgba(221, 220, 252, 1), rgba(255, 255, 255, 1));
   border-radius: 22px;
   height: 479px;
   width: 302px;
   padding: 6%;
   transition: background 0.5s ease, height 0.5s ease;
+  overflow: hidden;
 }
 
 .app-container.success {
@@ -45,10 +48,8 @@ h2 {
 
 .overlay {
   position: absolute;
-  /* top: 0;
-  left: 0; */
-  height: 479px;
-  width: 302px;
+  height: 100%;
+  width: 100%;
   background: linear-gradient(rgba(95, 92, 240, 0.8), rgba(221, 220, 252, 0.8), rgba(255, 255, 255, 0.8));
   border-radius: 22px;
   display: flex;
@@ -60,7 +61,7 @@ h2 {
 .plus-icon-container {
   display: flex;
   justify-content: flex-end;
-  
+  height: max-content;
 }
 
 .plus-icon {

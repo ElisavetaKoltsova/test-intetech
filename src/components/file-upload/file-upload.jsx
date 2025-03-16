@@ -136,23 +136,40 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
   };
 
   const handleResetClickButton = () => {
-    onReset();
-    setIsUploadedToServer(false);
-    setIsUploading(false);
-    setIsUploadingEnd(false);
-    setError(null);
-    setErrorValidationMessage(null);
-    setResponse({});
-    setFile(null);
+    if (!isLoader) {
+      // Очистка инпута
+      if (inputFileRef.current) {
+        inputFileRef.current.value = '';
+      }
+
+      if (isUploadedToServer || error !== null) {
+        setShadowRoot(null);
+      }
+
+      onReset();
+      setIsUploadedToServer(false);
+      setIsUploading(false);
+      setIsUploadingEnd(false);
+      setError(null);
+      setErrorValidationMessage(null);
+      setResponse({});
+      setFile(null);
+      setFileName('');
+      setProgress(0);
+    }
+  };
+
+  const handleClearFileNameInputClick = () => {
     setFileName('');
-    setShadowRoot(null);
-    setProgress(0);
+    if (inputFileNameRef.current.value) {
+      inputFileNameRef.current.value = '';
+    }
   };
 
   return (
     <>
-      <div className='plus-icon-container' disabled={isLoader}>
-        <div className='plus-icon' onClick={handleResetClickButton}>
+      <div className='plus-icon-container'>
+        <div className='plus-icon' onClick={handleResetClickButton} disabled={isLoader}>
           <PlusIcon />
         </div>
       </div>
@@ -183,7 +200,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
                           disabled={isLoader || isUploadingEnd}
                         />
                         {errorValidationMessage && errorValidationMessage.type === 'name' && <span className="error-message">{errorValidationMessage.message}</span>}
-                        <div className="gray-plus-icon-container">
+                        <div className="gray-plus-icon-container" onClick={handleClearFileNameInputClick}>
                           <GrayPlusIcon />
                         </div>
                       </div>
@@ -256,7 +273,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
                             </div>
                           </CSSTransition>
                         </div>
-                        <div>
+                        <div className="purple-plus-icon-conainer" onClick={handleResetClickButton}>
                           <PurplePlusIcon />
                         </div>
                       </div>
