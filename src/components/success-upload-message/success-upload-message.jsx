@@ -1,15 +1,17 @@
-const SuccessUploadMessage = ({file}) => {
-  console.log(file.lastModifiedDate)
+const SuccessUploadMessage = ({response}) => {
+
   return (
     <>
       <h1>Файл успешно загружен</h1>
       <div className="file-info">
-        <span>name: {file.name}</span> {/* только название */}
-        <span>filename: {file.type}</span>
-        <span>timestamp: {file.date}</span> {/* за сколько было загружено */}
-        <span>message: success</span>
+        <span>name: {response.name}</span> {/* только название */}
+        <span>filename:</span>
+        <span>
+          {response.filename}
+        </span>
+        <span>timestamp: {response.timestamp}</span> {/* за сколько было загружено */}
+        <span>message: {response.message}</span>
       </div>
-      
     </>
   );
 };

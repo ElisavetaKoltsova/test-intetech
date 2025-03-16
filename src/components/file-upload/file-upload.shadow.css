@@ -135,6 +135,14 @@ input[type="file"] {
   font-weight: 400;
   font-size: 17px;
 }
+.error-message {
+  position: absolute;
+  color: rgba(240, 92, 92, 1);
+  font-weight: 900;
+  font-size: 12px;
+  right: 0;
+  top: -5px;
+}
 
 /* Появление и исчезноваение элементов */
 .fade-enter {

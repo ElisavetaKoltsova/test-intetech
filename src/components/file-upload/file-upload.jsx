@@ -9,20 +9,25 @@ import {PlusIcon} from '../icons/plus-icon';
 import SuccessUploadMessage from "../success-upload-message/success-upload-message";
 import ErrorUploadMessage from "../error-upload-message/error-upload-message";
 import { uploadFile } from "../../services/uploadFile";
+import { allowedFormats } from "../../consts";
 
-const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
+const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
   const shadowHostRef = useRef(null);
   const [shadowRoot, setShadowRoot] = useState(null);
+  const inputFileNameRef = useRef(null);
+  const inputFileRef = useRef(null);
   const [file, setFile] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingEnd, setIsUploadingEnd] = useState(false);
   const [isUploadedToServer, setIsUploadedToServer] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [responce, setResponce] = useState({});
+  const [response, setResponse] = useState({});
   const [error, setError] = useState(null);
+  const [errorValidationMessage, setErrorValidationMessage] = useState(null);
+  const [isLoader, setIsLoader] = useState(false);
 
   const nodeInputRef = useRef(null);
   const nodeLoadingRef = useRef(null);
@@ -40,7 +45,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
       shadow.appendChild(style);
       setShadowRoot(shadow);
     }
-  }, []);
+  }, [shadowRoot]);
 
   const loadFile = () => {
     setIsUploading(true);
@@ -56,21 +61,46 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
         return prev + 10;
       });
     }, 200);
+  };
 
-    console.log("Готоый файл:", { file, name: fileName });
+  const uploadingFile = (newFile) => {
+    if (newFile) {
+      const fileExtension = newFile.name.slice(newFile.name.lastIndexOf('.')).toLowerCase();
+
+      if (!allowedFormats.includes(fileExtension)) {
+        setErrorValidationMessage({message: 'Допустимые форматы: .txt, .json, .csv', type: 'type'});
+
+        // Очистка инпута
+        if (inputFileRef.current) {
+          inputFileRef.current.value = '';
+        }
+
+        return;
+      }
+
+      if (!inputFileNameRef.current.value) {
+        setErrorValidationMessage({message: 'Введите название файла', type: 'name'});
+        // Очистка инпута
+        if (inputFileRef.current) {
+          inputFileRef.current.value = '';
+        }
+      } else {
+        setErrorValidationMessage(null);
+        setFile(newFile);
+        setFileName(inputFileNameRef.current.value);
+        loadFile();
+      }
+    }
   };
 
   const handleFileChange = (event) => {
     const newFile = event.target.files[0];
-    if (newFile) {
-      setFile(newFile);
-      setFileName(newFile.name);
-    }
 
-    loadFile();
+    uploadingFile(newFile);
   };
 
   const handleRename = (newName) => {
+    setErrorValidationMessage(null);
     setFile(newName);
     setFileName(newName.name);
   };
@@ -79,24 +109,22 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
     event.preventDefault();
     setDragOver(false);
     const newFile = event.dataTransfer.files[0];
-    if (newFile) {
-      setFile(newFile);
-      setFileName(newFile.name);
-    }
 
-    loadFile();
+    uploadingFile(newFile);
   };
 
   const handleSend = async () => {
     if (!file || !fileName) {
-      console.log("Сначала загрузите файл!");
       onUploadError();
       return;
     }
-    
+
+    setIsLoader(true);
+    onBlock();
+
     try {
       const data = await uploadFile(file, fileName);
-      setResponce(data);
+      setResponse(data);
       onUploadSuccess();
       setIsUploadedToServer(true);
     } catch (error) {
@@ -104,18 +132,33 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
       setError(error);
       setIsUploadedToServer(false);
     }
+    setIsLoader(false);
   };
-  console.log(responce, error)
+
+  const handleResetClickButton = () => {
+    onReset();
+    setIsUploadedToServer(false);
+    setIsUploading(false);
+    setIsUploadingEnd(false);
+    setError(null);
+    setErrorValidationMessage(null);
+    setResponse({});
+    setFile(null);
+    setFileName('');
+    setShadowRoot(null);
+    setProgress(0);
+  };
+
   return (
     <>
-      <div className='plus-icon-container'>
-        <div className='plus-icon'>
+      <div className='plus-icon-container' disabled={isLoader}>
+        <div className='plus-icon' onClick={handleResetClickButton}>
           <PlusIcon />
         </div>
       </div>
 
       {
-        !isUploadedToServer && error === null ?
+        (!isUploadedToServer && error === null) || isLoader ?
         (
           <><h1>Загрузочное окно</h1><h2>Перед загрузкой дайте имя файлу</h2><div ref={shadowHostRef} className="file-upload-container">
 
@@ -131,11 +174,15 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
                     >
                       <div ref={nodeInputRef} className={`rename-input-container ${!isUploading ? "fade-enter-active" : "fade-exit-active"}`}>
                         <input
+                          ref={inputFileNameRef}
                           className="rename-input"
                           type="text"
                           placeholder="Название файла"
-                          value={fileName}
-                          onInput={(e) => handleRename(e.target.value)} />
+                          defaultValue=""
+                          onInput={(e) => handleRename(e.target.value)}
+                          disabled={isLoader || isUploadingEnd}
+                        />
+                        {errorValidationMessage && errorValidationMessage.type === 'name' && <span className="error-message">{errorValidationMessage.message}</span>}
                         <div className="gray-plus-icon-container">
                           <GrayPlusIcon />
                         </div>
@@ -156,11 +203,15 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
                         <p>Перенесите ваш файл<br></br>в область ниже</p>
                       </label>
                       <input
+                        ref={inputFileRef}
                         className="file-upload-input"
                         id="file-input"
                         type="file"
                         accept=".txt,.json,.csv"
-                        onChange={handleFileChange} />
+                        onChange={handleFileChange}
+                        disabled={isLoader}
+                      />
+                      {errorValidationMessage && errorValidationMessage.type === 'type' && <span className="error-message">{errorValidationMessage.message}</span>}
                     </div>
 
                     <CSSTransition
@@ -211,7 +262,13 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
                       </div>
                     </CSSTransition>
 
-                    <button onClick={handleSend} className={`upload-button${isUploadingEnd ? '-active' : ''}`} disabled={!isUploadingEnd}>Загрузить</button>
+                    <button
+                      onClick={handleSend}
+                      className={`upload-button${isUploadingEnd ? '-active' : ''}`}
+                      disabled={!isUploadingEnd || isLoader}
+                    >
+                      Загрузить
+                    </button>
                   </>,
 
                   shadowRoot
@@ -228,7 +285,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
         unmountOnExit
       >
         <div ref={nodeSuccessMessageRef} className="success-message-container">
-          <SuccessUploadMessage file={file} />
+          <SuccessUploadMessage response={response} />
         </div>
       </CSSTransition>
 
@@ -240,7 +297,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
         nodeRef={nodeErrorMessageRef}
       >
         <div ref={nodeErrorMessageRef} className="error-message-container">
-          <ErrorUploadMessage error={error} />
+          <ErrorUploadMessage error={error !== null ? error : {message: ''}} />
         </div>
       </CSSTransition>
     </>

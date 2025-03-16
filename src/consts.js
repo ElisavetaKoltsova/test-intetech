@@ -1,0 +1,1 @@
+export const allowedFormats = ['.txt', '.json', '.csv'];
