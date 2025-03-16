@@ -242,6 +242,8 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
                       inputFileRef={inputFileRef}
                       onChange={handleFileChange}
                       isLoader={isLoader}
+                      isUploading={isUploading}
+                      isUploadingEnd={isUploadingEnd}
                       errorValidationMessage={errorValidationMessage}
                     />
 
@@ -255,13 +257,17 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
                       onClick={handleResetClickButton}
                     />
 
-                    <button
-                      onClick={handleSend}
-                      className={`upload-button${isUploadingEnd ? '-active' : ''}`}
-                      disabled={!isUploadingEnd || isLoader}
-                    >
-                      Загрузить
-                    </button>
+                    {
+                      !isLoader &&
+                      <button
+                        onClick={handleSend}
+                        className={`upload-button${isUploadingEnd ? '-active' : ''}`}
+                        disabled={!isUploadingEnd || isLoader}
+                      >
+                        Загрузить
+                      </button>
+                    }
+                    
                   </>,
 
                   shadowRoot
