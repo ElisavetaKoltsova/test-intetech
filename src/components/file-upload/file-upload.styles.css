@@ -19,6 +19,15 @@
   font-size: 14px;
 }
 
+.file-error-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 5%;
+  font-weight: 300;
+  font-size: 14px;
+}
+
 /* Появление и исчезноваение элементов */
 .fade-enter {
   opacity: 0;

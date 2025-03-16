@@ -8,6 +8,7 @@ import { CSSTransition } from "react-transition-group";
 import {PlusIcon} from '../icons/plus-icon';
 import SuccessUploadMessage from "../success-upload-message/success-upload-message";
 import ErrorUploadMessage from "../error-upload-message/error-upload-message";
+import { uploadFile } from "../../services/uploadFile";
 
 const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
   const shadowHostRef = useRef(null);
@@ -20,6 +21,8 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
   const [isUploadingEnd, setIsUploadingEnd] = useState(false);
   const [isUploadedToServer, setIsUploadedToServer] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [responce, setResponce] = useState({});
+  const [error, setError] = useState(null);
 
   const nodeInputRef = useRef(null);
   const nodeLoadingRef = useRef(null);
@@ -84,17 +87,25 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
     loadFile();
   };
 
-  const handleSend = () => {
-    if (!file) {
+  const handleSend = async () => {
+    if (!file || !fileName) {
       console.log("Сначала загрузите файл!");
       onUploadError();
       return;
     }
     
-    setIsUploadedToServer(true);
-    onUploadSuccess();
+    try {
+      const data = await uploadFile(file, fileName);
+      setResponce(data);
+      onUploadSuccess();
+      setIsUploadedToServer(true);
+    } catch (error) {
+      onUploadError();
+      setError(error);
+      setIsUploadedToServer(false);
+    }
   };
-
+  console.log(responce, error)
   return (
     <>
       <div className='plus-icon-container'>
@@ -104,7 +115,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
       </div>
 
       {
-        !isUploadedToServer ?
+        !isUploadedToServer && error === null ?
         (
           <><h1>Загрузочное окно</h1><h2>Перед загрузкой дайте имя файлу</h2><div ref={shadowHostRef} className="file-upload-container">
 
@@ -211,7 +222,7 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
       
       <CSSTransition
         nodeRef={nodeSuccessMessageRef}
-        in={isUploadedToServer}
+        in={isUploadedToServer && !error}
         timeout={500}
         classNames="fade"
         unmountOnExit
@@ -221,17 +232,17 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset }) => {
         </div>
       </CSSTransition>
 
-      {/* <CSSTransition
-        in={!isUploadedToServer}
+      <CSSTransition
+        in={error !== null}
         timeout={500}
         classNames="fade"
         unmountOnExit
         nodeRef={nodeErrorMessageRef}
       >
         <div ref={nodeErrorMessageRef} className="error-message-container">
-          <ErrorUploadMessage error={'error'} />
+          <ErrorUploadMessage error={error} />
         </div>
-      </CSSTransition> */}
+      </CSSTransition>
     </>
   );
 };
