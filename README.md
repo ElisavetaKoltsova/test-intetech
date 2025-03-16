@@ -2,6 +2,7 @@
 # File Upload Application for Intetech by Elisaveta Koltsova
 
 Этот проект предоставляет функционал для загрузки файлов на сервер с возможностью проверки формата и размера файла, а также отображения состояния загрузки.
+Ссылка на демонстрацию приложения: [GoogleDisk](https://drive.google.com/file/d/1JDzFVGGUg5-NJJQ6pVfAdvAwdgZ4Svbb/view?usp=sharing)
 
 ## Функции:
 1. **Форма загрузки файла**:
