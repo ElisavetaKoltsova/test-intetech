@@ -2,14 +2,15 @@ import React, { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import './file-upload.styles.css';
 import fileUploadStyles from "./file-upload.shadow.css?inline";
-import { GrayPlusIcon, PurplePlusIcon } from "../icons/plus-icon";
-import FileUploadIcon from "../icons/file-upload-icon";
 import { CSSTransition } from "react-transition-group";
 import {PlusIcon} from '../icons/plus-icon';
 import SuccessUploadMessage from "../success-upload-message/success-upload-message";
 import ErrorUploadMessage from "../error-upload-message/error-upload-message";
 import { uploadFile } from "../../services/uploadFile";
 import { allowedFormats } from "../../consts";
+import FileInput from "../file-input/file-input";
+import FileDropZone from "../file-drop-zone/file-drop-zone";
+import FileUploadProgress from "../file-upload-progress/file-upload-progress";
 
 const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
   const shadowHostRef = useRef(null);
@@ -182,102 +183,40 @@ const FileUpload = ({ onUploadSuccess, onUploadError, onReset, onBlock }) => {
               {shadowRoot &&
                 createPortal(
                   <>
-                    <CSSTransition
-                      nodeRef={nodeInputRef}
-                      in={!isUploading}
-                      timeout={300}
-                      classNames="fade"
-                      unmountOnExit
-                    >
-                      <div ref={nodeInputRef} className={`rename-input-container ${!isUploading ? "fade-enter-active" : "fade-exit-active"}`}>
-                        <input
-                          ref={inputFileNameRef}
-                          className="rename-input"
-                          type="text"
-                          placeholder="Название файла"
-                          defaultValue=""
-                          onInput={(e) => handleRename(e.target.value)}
-                          disabled={isLoader || isUploadingEnd}
-                        />
-                        {errorValidationMessage && errorValidationMessage.type === 'name' && <span className="error-message">{errorValidationMessage.message}</span>}
-                        <div className="gray-plus-icon-container" onClick={handleClearFileNameInputClick}>
-                          <GrayPlusIcon />
-                        </div>
-                      </div>
-                    </CSSTransition>
+                    <FileInput
+                      nodeInputRef={nodeInputRef}
+                      isUploading={isUploading}
+                      inputFileNameRef={inputFileNameRef}
+                      onInput={(e) => handleRename(e.target.value)}
+                      isLoader={isLoader}
+                      isUploadingEnd={isUploadingEnd}
+                      errorValidationMessage={errorValidationMessage}
+                      onClick={handleClearFileNameInputClick}
+                    />
 
-                    <div
-                      className={`upload-box ${dragOver ? "drag-over" : ""}`}
+                    <FileDropZone
+                      dragOver={dragOver}
                       onDragOver={(e) => {
                         e.preventDefault();
                         setDragOver(true);
-                      } }
+                      }}
                       onDragLeave={() => setDragOver(false)}
                       onDrop={handleDrop}
-                    >
-                      <label htmlFor="file-input">
-                        <img src="/docs.png" alt="Перенесите ваш файл в область ниже" className="icon" />
-                        <p>Перенесите ваш файл<br></br>в область ниже</p>
-                      </label>
-                      <input
-                        ref={inputFileRef}
-                        className="file-upload-input"
-                        id="file-input"
-                        type="file"
-                        accept=".txt,.json,.csv"
-                        onChange={handleFileChange}
-                        disabled={isLoader}
-                      />
-                      {errorValidationMessage && errorValidationMessage.type === 'type' && <span className="error-message">{errorValidationMessage.message}</span>}
-                    </div>
+                      inputFileRef={inputFileRef}
+                      onChange={handleFileChange}
+                      isLoader={isLoader}
+                      errorValidationMessage={errorValidationMessage}
+                    />
 
-                    <CSSTransition
-                      nodeRef={nodeLoadingRef}
-                      in={isUploading}
-                      timeout={500}
-                      classNames="fade"
-                      unmountOnExit
-                    >
-                      <div ref={nodeLoadingRef} className="loading-container">
-                        <div>
-                          <FileUploadIcon />
-                        </div>
-                        <div className="file-upload-name-and-loader-container">
-                          {!isUploadingEnd ? (
-                            <><div className="file-upload-name">
-                              <span>
-                                {fileName}
-                              </span>
-                              <span>
-                                {progress}%
-                              </span>
-                            </div>
-                              <div className="loader-container">
-                                <hr className="loader" style={{ width: `${progress}%` }} />
-                              </div></>
-                          ) : ''}
-                          <CSSTransition
-                            nodeRef={nodeLoadingEndRef}
-                            in={isUploadingEnd}
-                            timeout={500}
-                            classNames="fade"
-                            unmountOnExit
-                          >
-                            <div ref={nodeLoadingEndRef} className="file-upload-end-name">
-                              <span>
-                                {fileName}
-                              </span>
-                              <span className="percent">
-                                100%
-                              </span>
-                            </div>
-                          </CSSTransition>
-                        </div>
-                        <div className="purple-plus-icon-conainer" onClick={handleResetClickButton}>
-                          <PurplePlusIcon />
-                        </div>
-                      </div>
-                    </CSSTransition>
+                    <FileUploadProgress
+                      nodeLoadingRef={nodeLoadingRef}
+                      nodeLoadingEndRef={nodeLoadingEndRef}
+                      isUploading={isUploading}
+                      isUploadingEnd={isUploadingEnd}
+                      fileName={fileName}
+                      progress={progress}
+                      onClick={handleResetClickButton}
+                    />
 
                     <button
                       onClick={handleSend}

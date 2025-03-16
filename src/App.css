@@ -19,8 +19,6 @@ h2 {
 
 .app-container {
   position: relative;
-  /* display: flex;
-  flex-direction: column; */
   display: grid;
   grid-template-rows: auto;
   background: linear-gradient(rgba(95, 92, 240, 1), rgba(221, 220, 252, 1), rgba(255, 255, 255, 1));
